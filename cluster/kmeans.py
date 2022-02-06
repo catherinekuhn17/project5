@@ -35,26 +35,26 @@ class KMeans:
                 A 2D matrix where the rows are observations and columns are features
         """
 
-        ctrs_idx = np.random.choice(len(mat), self.k, replace=False)
-        centroids = mat[ctrs_idx, :]
-        dist_to_centroids = cdist(mat, centroids, self.metric)
-        closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids])
+        ctrs_idx = np.random.choice(len(mat), self.k, replace=False) # find k random indices to assigns as centroids
+        centroids = mat[ctrs_idx, :] # make these points the centroids
+        dist_to_centroids = cdist(mat, centroids, self.metric) # find dist of each point to each of the centroids
+        closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids]) # find the closest centroid to each point
 
         itr=0
-        while itr < max_iter: # max itterations to go for before exiting
+        while itr < max_iter: # max iterations to go for before exiting
             centroids = []
-            for k_idx in range(self.k):
-                centroids.append(mat[closest_centroid==k_idx].mean(axis=0))
-            dist_to_centroids = cdist(mat, centroids)
-            closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids])
+            for k_idx in range(self.k): # for each k center
+                centroids.append(mat[closest_centroid==k_idx].mean(axis=0)) # find a new centroid at the middle of the assigned points
+            dist_to_centroids = cdist(mat, centroids, self.metric) # find dist of each point to each of the new centroids
+            closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids]) # find the closest centroid to each point
             itr+=1
-            new_err = calc_mse(mat, self.k, closest_centroid) 
-            if self._err - new_err < tol:
+            new_err = calc_mse(mat, self.k, closest_centroid) # calculate the error of this round
+            if self._err - new_err < tol: # if new error is the value of tol less than the previous error
                 self._err = new_err
                 break
             self._err = new_err
 
-        self.centroids = centroids  
+        self._centroids = centroids  
 
     def _calc_mse(self, mat, closest_centroid):
         """
@@ -62,7 +62,8 @@ class KMeans:
         
         inputs:
             mat: np.ndarray
-                A 2D matrix where the rows are observations and columns are features             closest_centroid:
+                A 2D matrix where the rows are observations and columns are features             
+            closest_centroid:
                 the closest centroid to each point in mat
         returns:
             float
@@ -70,12 +71,12 @@ class KMeans:
         """
         sq_err = []
         for k_idx in range(self.k):
-            n = len(mat[closest_centroid==k_idx])
-            num = sum(np.square(cdist(mat[closest_centroid==k_idx], 
+            n = len(mat[closest_centroid==k_idx]) # denominator of mse (# of points assigned to that k)
+            num = sum(np.square(cdist(mat[closest_centroid==k_idx], # numerator of mse (square of distances of points to centroid)
                                     [centroids[k_idx]])))
             sq_err.append((num/n)[0])
 
-        return sum(sq_err)
+        return sum(sq_err) # final mse is sum of this for all k's
     
     def predict(self, mat: np.ndarray) -> np.ndarray:
         """
@@ -89,8 +90,8 @@ class KMeans:
             np.ndarray
                 a 1D array with the cluster label for each of the observations in `mat`
         """
-        dist_to_centroids = cdist(mat, self.centroids)
-        closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids])
+        dist_to_centroids = cdist(mat, self._centroids) # use the centroids determined in fit
+        closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids]) # find closest centroid to each point
         return closest_centroid
     
     def get_error(self) -> float:
@@ -111,5 +112,5 @@ class KMeans:
             np.ndarray
                 a `k x m` 2D matrix representing the cluster centroids of the fit model
         """
-        return self.centroids
+        return self._centroids
 
