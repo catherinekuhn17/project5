@@ -38,12 +38,12 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
-        closest_centroid = np.array([np.random.randint(0,k) for e in range(len(mat))]) # randomly assign each point in mat to a k
+        closest_centroid = np.array([np.random.randint(0,self.k) for e in range(len(mat))]) # randomly assign each point in mat to a k
         itr=0
         starting=True
         while itr <= self.max_iter: # max iterations to go for before exiting
             if starting==True:
-                closest_centroid = np.array([np.random.randint(0,k) for e in range(len(mat))])
+                closest_centroid = np.array([np.random.randint(0,self.k) for e in range(len(mat))])
             starting=False
             centroids = []
             for k_idx in range(self.k): # for each k center
@@ -51,26 +51,24 @@ class KMeans:
             self._centroids = centroids
            # plt.scatter(mat[:,0], mat[:,1], c=closest_centroid)
            # plt.scatter(np.array(centroids)[:,0], np.array(centroids)[:,1], c='red')
-            dist_to_centroids = cdist(mat, centroids, metric) # find dist of each point to each of the new centroids
+            dist_to_centroids = cdist(mat, centroids, self.metric) # find dist of each point to each of the new centroids
             closest_centroid = np.array([np.argmin(d) for d in dist_to_centroids]) # find the closest centroid to each point
             # for weird edge cases where we "lose" a k (as in all the points are only assigned to a subset of the k values)
             # we're just going to restart with a new random assignment.
-            if len(np.unique(closest_centroid)) < k: 
+            if len(np.unique(closest_centroid)) < self.k: 
                 itr=0
                 starting=True
                 self._err=np.inf
                 kmeans.all_scores = []
                 continue
             itr+=1
-            plt.scatter(mat[:,0], mat[:,1], c=closest_centroid)
-            plt.scatter(np.array(centroids)[:,0], np.array(centroids)[:,1], c='red')
-            plt.show()
+
             new_err = self._calc_mse(mat, np.array(closest_centroid)) # calculate the error of this round
             if len(self._all_scores) > 0:
                 self._all_scores.append(new_err)
             else:
                 self._all_scores= [new_err]
-            if abs(self._err - new_err) < tol: # if new error is the value of tol less than the previous error
+            if abs(self._err - new_err) < self.tol: # if new error is the value of tol less than the previous error
                 self._err = new_err
                 break
             else:
@@ -96,7 +94,7 @@ class KMeans:
             
             n = len(mat[closest_centroid==k_idx]) # denominator of mse (# of points assigned to that k)
             # numerator of mse (square of distances of points to centroid)
-            num = sum(np.square(cdist(mat[closest_centroid==k_idx],[self._centroids[k_idx]])))
+            num = sum(np.square(cdist(mat[closest_centroid==k_idx],[self._centroids[k_idx]], self.metric)))
             if n>0:
                 sq_err.append((num/n)[0])
         return sum(sq_err) # final mse is sum of this for all k's
