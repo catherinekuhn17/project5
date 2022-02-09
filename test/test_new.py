@@ -32,6 +32,4 @@ def score_range():
     sil_score = silhouette.score(mat, labels)
     
     assert len(sil_score) == len(mat)
-    
-def idk():
-    pass
+

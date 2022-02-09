@@ -28,11 +28,11 @@ class Silhouette:
         k_labs = np.unique(y)
         s_val_all = np.zeros(len(X))
         for k_val in k_labs:
-            self._len_k = len(X[y==k_val])
+            len_k = len(X[y==k_val])
             for idx, pt in zip(np.where(y==k_val)[0], X[y==k_val]):
-                self._dist_mat_same = cdist([pt], X[y==k_val], self._metric)[0]
+                dist_mat_same = cdist([pt], X[y==k_val], self._metric)[0]
                 a_val = 1/(len_k-1)*sum(dist_mat_same)
-                self._diff_k_val = np.delete(k_labs, k_val)
+                diff_k_val = np.delete(k_labs, k_val)
                 tmp_b=[]
                 for k_val_diff in diff_k_val:
                     len_k_diff = len(X[y==k_val_diff])

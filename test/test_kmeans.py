@@ -3,6 +3,39 @@ from cluster import KMeans
 from cluster import make_clusters
 import unittest
 
+from cluster import Silhouette
+
+
+def score_range():
+    '''
+    unit test to assert that all scores fall between 0 and 1
+    '''
+    mat,_ = make_clusters(k=3)
+    kmeans = KMeans(k=3)
+    kmeans.fit(mat)
+    labels = kmeans.predict(mat)
+    silhouette = Silhouette()
+    sil_score = silhouette.score(mat, labels)
+    
+    assert all(i <= 1 for i in sil_score)
+    assert all(i >= 0 for i in sil_score)
+    
+    
+def score_range2():
+    '''
+    unit test to assert that all scores fall between 0 and 1
+    '''
+    mat,_ = make_clusters(k=3)
+    kmeans = KMeans(k=3)
+    kmeans.fit(mat)
+    labels = kmeans.predict(mat)
+    assert 1==1
+    silhouette = Silhouette()
+    sil_score = silhouette.score(mat, labels)
+    
+    assert len(sil_score) == len(mat)
+
+
 def test_descend_errors():
     '''
     this unit test assures that each itteration of the kmeans fit produces a lower
@@ -29,6 +62,16 @@ def test_output():
     assert len(labels) == len(mat)
     for l in labels:
         assert l in range(k)
+        
+    mat,_ = make_clusters(k=3)
+    kmeans = KMeans(k=3)
+    kmeans.fit(mat)
+    labels = kmeans.predict(mat)
+    silhouette = Silhouette()
+    sil_score = silhouette.score(mat, labels)
+    
+    assert all(i <= 1 for i in sil_score)
+    assert all(i >= -1 for i in sil_score)
 
 
 def test_extreme():
@@ -42,7 +85,7 @@ def test_extreme():
     pass
 
 
-class raiseTest_ksmall(unittest.TestCase):
+class raiseTest_kval(unittest.TestCase):
     '''
     testing edge cases that SHOULD throw errors (such as trying to make k 0, 
     or tryingto use more k's than there are number of points.
@@ -58,6 +101,8 @@ class raiseTest_ksmall(unittest.TestCase):
             
     if __name__ == "__main__":
         unittest.main()
+    
+    
     
 
 
