@@ -1,5 +1,5 @@
 # Write your k-means unit tests here
-from kmeans import KMeans
+from cluster import KMeans
 from utils import make_clusters
 
 def test_descend_errors():
