@@ -7,7 +7,8 @@ class KMeans:
             k: int,
             metric: str = "euclidean",
             tol: float = 1e-6,
-            max_iter: int = 100):
+            max_iter: int = 100,
+            ):
         """
         inputs:
             k: int
@@ -24,7 +25,10 @@ class KMeans:
         self.tol = tol
         self.max_iter = max_iter
         self._err = np.inf
-        
+        self._all_scores = []
+    
+    
+    
     
     def fit(self, mat: np.ndarray):
         """
@@ -34,27 +38,45 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
-
-        ctrs_idx = np.random.choice(len(mat), self.k, replace=False) # find k random indices to assigns as centroids
-        centroids = mat[ctrs_idx, :] # make these points the centroids
-        dist_to_centroids = cdist(mat, centroids, self.metric) # find dist of each point to each of the centroids
-        closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids]) # find the closest centroid to each point
-
+        closest_centroid = np.array([np.random.randint(0,k) for e in range(len(mat))]) # randomly assign each point in mat to a k
         itr=0
-        while itr < max_iter: # max iterations to go for before exiting
+        starting=True
+        while itr <= self.max_iter: # max iterations to go for before exiting
+            if starting==True:
+                closest_centroid = np.array([np.random.randint(0,k) for e in range(len(mat))])
+            starting=False
             centroids = []
             for k_idx in range(self.k): # for each k center
                 centroids.append(mat[closest_centroid==k_idx].mean(axis=0)) # find a new centroid at the middle of the assigned points
-            dist_to_centroids = cdist(mat, centroids, self.metric) # find dist of each point to each of the new centroids
-            closest_centroid = np.array([np.argsort(d)[0] for d in dist_to_centroids]) # find the closest centroid to each point
+            self._centroids = centroids
+           # plt.scatter(mat[:,0], mat[:,1], c=closest_centroid)
+           # plt.scatter(np.array(centroids)[:,0], np.array(centroids)[:,1], c='red')
+            dist_to_centroids = cdist(mat, centroids, metric) # find dist of each point to each of the new centroids
+            closest_centroid = np.array([np.argmin(d) for d in dist_to_centroids]) # find the closest centroid to each point
+            # for weird edge cases where we "lose" a k (as in all the points are only assigned to a subset of the k values)
+            # we're just going to restart with a new random assignment.
+            if len(np.unique(closest_centroid)) < k: 
+                itr=0
+                starting=True
+                self._err=np.inf
+                kmeans.all_scores = []
+                continue
             itr+=1
-            new_err = calc_mse(mat, self.k, closest_centroid) # calculate the error of this round
-            if self._err - new_err < tol: # if new error is the value of tol less than the previous error
+            plt.scatter(mat[:,0], mat[:,1], c=closest_centroid)
+            plt.scatter(np.array(centroids)[:,0], np.array(centroids)[:,1], c='red')
+            plt.show()
+            new_err = self._calc_mse(mat, np.array(closest_centroid)) # calculate the error of this round
+            if len(self._all_scores) > 0:
+                self._all_scores.append(new_err)
+            else:
+                self._all_scores= [new_err]
+            if abs(self._err - new_err) < tol: # if new error is the value of tol less than the previous error
                 self._err = new_err
                 break
-            self._err = new_err
-
-        self._centroids = centroids  
+            else:
+                self._err = new_err
+            
+        
 
     def _calc_mse(self, mat, closest_centroid):
         """
@@ -71,11 +93,12 @@ class KMeans:
         """
         sq_err = []
         for k_idx in range(self.k):
+            
             n = len(mat[closest_centroid==k_idx]) # denominator of mse (# of points assigned to that k)
-            num = sum(np.square(cdist(mat[closest_centroid==k_idx], # numerator of mse (square of distances of points to centroid)
-                                    [centroids[k_idx]])))
-            sq_err.append((num/n)[0])
-
+            # numerator of mse (square of distances of points to centroid)
+            num = sum(np.square(cdist(mat[closest_centroid==k_idx],[self._centroids[k_idx]])))
+            if n>0:
+                sq_err.append((num/n)[0])
         return sum(sq_err) # final mse is sum of this for all k's
     
     def predict(self, mat: np.ndarray) -> np.ndarray:
@@ -103,6 +126,16 @@ class KMeans:
                 the squared-mean error of the fit model
         """
         return self._err
+    
+    def get_all_errors(self) -> np.ndarray:
+        """
+        returns all the MSE error scores for each itteration
+
+        outputs:
+            np.ndarray
+                an array of each score
+        """
+        return self._all_scores
 
     def get_centroids(self) -> np.ndarray:
         """
