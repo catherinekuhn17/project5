@@ -5,7 +5,7 @@ from cluster import make_clusters
 from cluster import Silhouette
 import unittest
 
-def score_range():
+def test_score_range():
     '''
     unit test to assert that all scores fall between 0 and 1
     '''
@@ -17,10 +17,10 @@ def score_range():
     sil_score = silhouette.score(mat, labels)
     
     assert all(i <= 1 for i in sil_score)
-    assert all(i >= 0 for i in sil_score)
+    assert all(i >= -1 for i in sil_score)
     
     
-def score_range():
+def test_score_length():
     '''
     unit test to assert that all scores fall between 0 and 1
     '''
@@ -33,5 +33,4 @@ def score_range():
     
     assert len(sil_score) == len(mat)
     
-def idk():
-    pass
+
