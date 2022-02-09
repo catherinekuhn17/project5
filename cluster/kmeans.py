@@ -21,6 +21,8 @@ class KMeans:
                 the maximum number of iterations before quitting model fit
         """
         self.k = k
+        if self.k==0:
+            raise ValueError('k value cannot be zero')
         self.metric = metric
         self.tol = tol
         self.max_iter = max_iter
@@ -38,29 +40,19 @@ class KMeans:
             mat: np.ndarray
                 A 2D matrix where the rows are observations and columns are features
         """
+        if self.k>len(mat):
+            raise ValueError('more cluster centers than points')
+            
         closest_centroid = np.array([np.random.randint(0,self.k) for e in range(len(mat))]) # randomly assign each point in mat to a k
         itr=0
-        starting=True
         while itr <= self.max_iter: # max iterations to go for before exiting
-            if starting==True:
-                closest_centroid = np.array([np.random.randint(0,self.k) for e in range(len(mat))])
-            starting=False
             centroids = []
             for k_idx in range(self.k): # for each k center
-                centroids.append(mat[closest_centroid==k_idx].mean(axis=0)) # find a new centroid at the middle of the assigned points
+                # find a new centroid at the middle of the assigned points
+                centroids.append(mat[closest_centroid==k_idx].mean(axis=0)) 
             self._centroids = centroids
-           # plt.scatter(mat[:,0], mat[:,1], c=closest_centroid)
-           # plt.scatter(np.array(centroids)[:,0], np.array(centroids)[:,1], c='red')
             dist_to_centroids = cdist(mat, centroids, self.metric) # find dist of each point to each of the new centroids
             closest_centroid = np.array([np.argmin(d) for d in dist_to_centroids]) # find the closest centroid to each point
-            # for weird edge cases where we "lose" a k (as in all the points are only assigned to a subset of the k values)
-            # we're just going to restart with a new random assignment.
-            if len(np.unique(closest_centroid)) < self.k: 
-                itr=0
-                starting=True
-                self._err=np.inf
-                kmeans.all_scores = []
-                continue
             itr+=1
 
             new_err = self._calc_mse(mat, np.array(closest_centroid)) # calculate the error of this round
