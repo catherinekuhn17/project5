@@ -22,7 +22,7 @@ def test_score_range():
     
 def test_score_length():
     '''
-    unit test to assert that all scores fall between 0 and 1
+    unit test to assert that lenth of the scores is same as the length of the matrix
     '''
     mat,_ = make_clusters(k=3)
     kmeans = KMeans(k=3)
